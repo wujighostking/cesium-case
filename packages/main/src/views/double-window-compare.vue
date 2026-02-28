@@ -1,22 +1,20 @@
 <script setup lang="ts">
+import type { Viewer } from 'cesium'
+import type { ShallowRef } from 'vue'
 import { useCompare, useViewer } from '@cesium/viewer'
 import { ImageryLayer, UrlTemplateImageryProvider } from 'cesium'
-import { useTemplateRef, watchEffect } from 'vue'
+import { useTemplateRef } from 'vue'
 
 const containerRef = useTemplateRef('cesiumContainer')
-const viewer = useViewer(containerRef)
+const sliderRef = useTemplateRef('slider')
+const viewer = useViewer(containerRef) as ShallowRef<Viewer>
 
-watchEffect(() => {
-  if (!viewer.value)
-    return
-
-  useCompare(
-    viewer.value,
-    createVecImageryLayer(),
-    createImgImageryLayer(),
-    document.getElementById('slider') as HTMLDivElement,
-  )
-})
+useCompare(
+  viewer,
+  createVecImageryLayer(),
+  createImgImageryLayer(),
+  sliderRef,
+)
 
 const tianDiTuKey = 'd3bd4850920690f790ce6d52a9ad73af'
 function createVecImageryLayer() {
@@ -38,11 +36,9 @@ function createImgImageryLayer() {
 </script>
 
 <template>
-  <div ref="cesiumContainer" class="fullSize">
-    <div id="slider" />
+  <div ref="cesiumContainer">
+    <div id="slider" ref="slider" />
   </div>
-
-  <div id="toolbar" />
 </template>
 
 <style scoped>

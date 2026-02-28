@@ -1,5 +1,8 @@
-import type { Viewer } from 'cesium'
-import { Cesium3DTileset, ImageryLayer, Model, Primitive, ScreenSpaceEventHandler, ScreenSpaceEventType, SplitDirection } from 'cesium'
+import type { ShallowRef, useTemplateRef } from 'vue'
+import { Cesium3DTileset, defined, ImageryLayer, Model, ScreenSpaceEventHandler, ScreenSpaceEventType, SplitDirection, Viewer } from 'cesium'
+
+import { isElement } from 'utils'
+import { watch } from 'vue'
 
 export function useDoubleWindowCompare(leftViewer: Viewer, rightViewer: Viewer) {
   function trackRight() {
@@ -42,66 +45,70 @@ export function useDoubleWindowCompare(leftViewer: Viewer, rightViewer: Viewer) 
 }
 
 type Splittable = Model | Cesium3DTileset | ImageryLayer
-export function useCompare<T = any>(Viewer: Viewer, left: T, right: T, slider: HTMLDivElement): void
-export function useCompare(Viewer: Viewer, left: Cesium3DTileset, right: Cesium3DTileset, slider: HTMLDivElement): void
-export function useCompare(Viewer: Viewer, left: Model, right: Model, slider: HTMLDivElement): void
+type SliderRef = ReturnType<typeof useTemplateRef<HTMLDivElement>>
 
-export function useCompare(viewer: Viewer, left: Splittable, right: Splittable, slider: HTMLDivElement) {
-  if (left instanceof ImageryLayer && right instanceof ImageryLayer) {
-    viewer.scene.imageryLayers.add(left)
-    viewer.scene.imageryLayers.add(right)
-  }
-  else if (left instanceof Cesium3DTileset && right instanceof Cesium3DTileset) {
-    viewer.scene.primitives.add(left)
-    viewer.scene.primitives.add(right)
-  }
-  else if (left instanceof Model && right instanceof Model) {
-    viewer.scene.primitives.add(left)
-    viewer.scene.primitives.add(right)
-  }
-  else if (left instanceof Primitive && right instanceof Primitive) {
-    viewer.scene.primitives.add(left)
-    viewer.scene.primitives.add(right)
-  }
+export function useCompare<T = any>(Viewer: ShallowRef<Viewer>, left: T, right: T, slider: SliderRef): void
+export function useCompare(Viewer: ShallowRef<Viewer>, left: Cesium3DTileset, right: Cesium3DTileset, slider: SliderRef): void
+export function useCompare(Viewer: ShallowRef<Viewer>, left: Model, right: Model, slider: SliderRef): void
 
-  left.splitDirection = SplitDirection.LEFT
-  viewer.zoomTo(left as any)
-  right.splitDirection = SplitDirection.RIGHT
+export function useCompare(viewer: ShallowRef<Viewer>, left: Splittable, right: Splittable, slider: SliderRef): void {
+  watch(() => [viewer.value, slider.value], (newValue) => {
+    const [viewer, slider] = newValue
 
-  // Sync the position of the slider with the split position
-  viewer.scene.splitPosition
-    = slider.offsetLeft / slider.parentElement!.offsetWidth
-
-  const handler = new ScreenSpaceEventHandler(slider as any)
-
-  let moveActive = false
-
-  function move(movement: any) {
-    if (!moveActive) {
+    if (!(viewer instanceof Viewer) || !isElement(slider))
       return
+
+    if (left instanceof ImageryLayer && right instanceof ImageryLayer) {
+      viewer.scene.imageryLayers.add(left)
+      viewer.scene.imageryLayers.add(right)
+    }
+    else if (left instanceof Cesium3DTileset && right instanceof Cesium3DTileset) {
+      viewer.scene.primitives.add(left)
+      viewer.scene.primitives.add(right)
+    }
+    else if (left instanceof Model && right instanceof Model) {
+      viewer.scene.primitives.add(left)
+      viewer.scene.primitives.add(right)
     }
 
-    const relativeOffset = movement.endPosition.x
-    const splitPosition
-      = (slider.offsetLeft + relativeOffset) / slider.parentElement!.offsetWidth
-    slider.style.left = `${100.0 * splitPosition}%`
-    viewer.scene.splitPosition = splitPosition
-  }
+    left.splitDirection = SplitDirection.LEFT
+    viewer.zoomTo(left as any)
+    right.splitDirection = SplitDirection.RIGHT
 
-  handler.setInputAction(() => {
-    moveActive = true
-  }, ScreenSpaceEventType.LEFT_DOWN)
-  handler.setInputAction(() => {
-    moveActive = true
-  }, ScreenSpaceEventType.PINCH_START)
+    // Sync the position of the slider with the split position
+    viewer.scene.splitPosition = slider.offsetLeft / slider.parentElement!.offsetWidth
 
-  handler.setInputAction(move, ScreenSpaceEventType.MOUSE_MOVE)
-  handler.setInputAction(move, ScreenSpaceEventType.PINCH_MOVE)
+    const handler = new ScreenSpaceEventHandler(slider as any)
 
-  handler.setInputAction(() => {
-    moveActive = false
-  }, ScreenSpaceEventType.LEFT_UP)
-  handler.setInputAction(() => {
-    moveActive = false
-  }, ScreenSpaceEventType.PINCH_END)
+    let moveActive = false
+
+    function move(movement: any) {
+      if (!moveActive || !isElement(slider) || !(viewer instanceof Viewer)) {
+        return
+      }
+
+      const relativeOffset = movement.endPosition.x
+      const splitPosition
+        = (slider.offsetLeft + relativeOffset) / slider.parentElement!.offsetWidth
+      slider.style.left = `${100.0 * splitPosition}%`
+      viewer.scene.splitPosition = splitPosition
+    }
+
+    handler.setInputAction(() => {
+      moveActive = true
+    }, ScreenSpaceEventType.LEFT_DOWN)
+    handler.setInputAction(() => {
+      moveActive = true
+    }, ScreenSpaceEventType.PINCH_START)
+
+    handler.setInputAction(move, ScreenSpaceEventType.MOUSE_MOVE)
+    handler.setInputAction(move, ScreenSpaceEventType.PINCH_MOVE)
+
+    handler.setInputAction(() => {
+      moveActive = false
+    }, ScreenSpaceEventType.LEFT_UP)
+    handler.setInputAction(() => {
+      moveActive = false
+    }, ScreenSpaceEventType.PINCH_END)
+  })
 }
