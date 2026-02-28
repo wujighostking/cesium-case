@@ -5,7 +5,12 @@ export const routesLink = [
   {
     path: '/eagle-viewer',
     name: '鹰眼图',
-    component: () => import('../views/eagle-viewer.vue'),
+    component: () => import('@/views/eagle-viewer.vue'),
+  },
+  {
+    path: '/double-window-compare',
+    name: '双屏对比',
+    component: () => import('@/views/double-window-compare.vue'),
   },
 ]
 
@@ -13,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: '首页',
-    component: () => import('../views/index.vue'),
+    component: () => import('@/views/index.vue'),
   },
 
   ...routesLink,

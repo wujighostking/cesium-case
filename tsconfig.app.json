@@ -6,10 +6,16 @@
     "lib": ["esnext", "DOM", "DOM.Iterable"],
     "moduleDetection": "force",
     "useDefineForClassFields": true,
+
+    "baseUrl": ".",
     "module": "ESNext",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["packages/main/src/*"]
+    },
+
     "types": ["vite/client"],
     "allowImportingTsExtensions": true,
 

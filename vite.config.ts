@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import UnoCss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -14,4 +15,10 @@ export default defineConfig({
       dts: 'typings/auto-imports.d.ts',
     }),
   ],
+
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './packages/main/src'),
+    },
+  },
 })
