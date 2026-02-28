@@ -1,6 +1,5 @@
-import type { ShallowRef, useTemplateRef } from 'vue'
-import { Cesium3DTileset, defined, ImageryLayer, Model, ScreenSpaceEventHandler, ScreenSpaceEventType, SplitDirection, Viewer } from 'cesium'
-
+import type { ShallowRef, useTemplateRef, WatchHandle } from 'vue'
+import { Cesium3DTileset, ImageryLayer, Model, ScreenSpaceEventHandler, ScreenSpaceEventType, SplitDirection, Viewer } from 'cesium'
 import { isElement } from 'utils'
 import { watch } from 'vue'
 
@@ -47,12 +46,10 @@ export function useDoubleWindowCompare(leftViewer: Viewer, rightViewer: Viewer) 
 type Splittable = Model | Cesium3DTileset | ImageryLayer
 type SliderRef = ReturnType<typeof useTemplateRef<HTMLDivElement>>
 
-export function useCompare<T = any>(Viewer: ShallowRef<Viewer>, left: T, right: T, slider: SliderRef): void
-export function useCompare(Viewer: ShallowRef<Viewer>, left: Cesium3DTileset, right: Cesium3DTileset, slider: SliderRef): void
-export function useCompare(Viewer: ShallowRef<Viewer>, left: Model, right: Model, slider: SliderRef): void
+export function useCompare<T = Splittable>(Viewer: ShallowRef<Viewer>, left: T, right: T, slider: SliderRef): WatchHandle
 
-export function useCompare(viewer: ShallowRef<Viewer>, left: Splittable, right: Splittable, slider: SliderRef): void {
-  watch(() => [viewer.value, slider.value], (newValue) => {
+export function useCompare(viewer: ShallowRef<Viewer>, left: Splittable, right: Splittable, slider: SliderRef): WatchHandle {
+  return watch(() => [viewer.value, slider.value], (newValue) => {
     const [viewer, slider] = newValue
 
     if (!(viewer instanceof Viewer) || !isElement(slider))
