@@ -1,7 +1,7 @@
-import type { useTemplateRef } from 'vue'
+import type { ShallowRef, useTemplateRef } from 'vue'
 import { Camera, Rectangle, Viewer } from 'cesium'
 import { isElement, isString } from 'utils'
-import { onBeforeUnmount, onMounted, shallowRef } from 'vue'
+import { onBeforeUnmount, onMounted, shallowRef, watch } from 'vue'
 
 type ViewerParams = ConstructorParameters<typeof Viewer>
 type Container = ReturnType<typeof useTemplateRef>
@@ -44,32 +44,31 @@ export function useViewer(container: Container, options?: ViewerParams[1]) {
   return viewerInstance
 }
 
-interface EagleOptions {
-  viewer: Viewer
-  viewer2: Viewer
-}
-export function useEagleViewer(eagleOptions: EagleOptions) {
-  const { viewer, viewer2 } = eagleOptions
-
+export function useEagleViewer(viewer: ShallowRef<Viewer>, eagleViewer: ShallowRef<Viewer>) {
   function eagleEye() {
-    viewer2.scene.screenSpaceCameraController.enableInputs = false
+    eagleViewer.value.scene.screenSpaceCameraController.enableInputs = false
     // 每一帧渲染时监听
     // viewer1.clock.onTick.addEventListener(this.syncCamera)
     // 场景渲染前添加监听
-    viewer.scene.preRender.addEventListener(syncCamera)
+    viewer.value.scene.preRender.addEventListener(syncCamera)
   }
 
   function syncCamera() {
-    viewer2.camera.flyTo({
-      destination: viewer.camera.position,
+    eagleViewer.value.camera.flyTo({
+      destination: viewer.value.camera.position,
       orientation: {
-        heading: viewer.camera.heading,
-        pitch: viewer.camera.pitch,
-        roll: viewer.camera.roll,
+        heading: viewer.value.camera.heading,
+        pitch: viewer.value.camera.pitch,
+        roll: viewer.value.camera.roll,
       },
       duration: 0.0,
     })
   }
 
-  eagleEye()
+  return watch(() => [viewer.value, eagleViewer.value], (_, __, onCleanup) => {
+    eagleEye()
+    onCleanup(() => {
+      viewer.value?.scene?.preRender?.removeEventListener(syncCamera)
+    })
+  })
 }

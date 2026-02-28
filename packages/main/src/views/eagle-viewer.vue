@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { Viewer } from 'cesium'
+import type { ShallowRef } from 'vue'
 import { useEagleViewer, useViewer } from '@cesium/viewer'
 import { ImageryLayer, UrlTemplateImageryProvider } from 'cesium'
-import { useTemplateRef, watchEffect } from 'vue'
+import { useTemplateRef } from 'vue'
 
 const cesiumContainerRef = useTemplateRef('cesiumContainer')
 const eagleContainerRef = useTemplateRef('eagleContainer')
@@ -18,22 +20,16 @@ function createTianDiTuImageryLayer() {
 
 const viewer = useViewer(cesiumContainerRef, {
   baseLayer: createTianDiTuImageryLayer(),
-})
+}) as ShallowRef<Viewer>
 
-const eagle = useViewer(eagleContainerRef, {
+const eagleViewer = useViewer(eagleContainerRef, {
   baseLayer: createTianDiTuImageryLayer(),
-})
+}) as ShallowRef<Viewer>
 
-let eagleReady = false
-watchEffect(() => {
-  if (viewer.value && eagle.value && !eagleReady) {
-    useEagleViewer({
-      viewer: viewer.value,
-      viewer2: eagle.value,
-    })
-    eagleReady = true
-  }
-})
+useEagleViewer(
+  viewer,
+  eagleViewer,
+)
 </script>
 
 <template>
