@@ -12,6 +12,11 @@ export const routesLink = [
     name: '双屏对比',
     component: () => import('@/views/double-window-compare.vue'),
   },
+  {
+    path: '/wind-speed',
+    name: '全球风向',
+    component: () => import('@/views/wind-speed.vue'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [
