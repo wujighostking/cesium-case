@@ -49,7 +49,7 @@ type SliderRef = ReturnType<typeof useTemplateRef<HTMLDivElement>>
 export function useCompare<T = Splittable>(Viewer: ShallowRef<Viewer>, left: T, right: T, slider: SliderRef): WatchHandle
 
 export function useCompare(viewer: ShallowRef<Viewer>, left: Splittable, right: Splittable, slider: SliderRef): WatchHandle {
-  return watch(() => [viewer.value, slider.value], (newValue) => {
+  return watch(() => [viewer.value, slider.value], (newValue, _, onCleanup) => {
     const [viewer, slider] = newValue
 
     if (!(viewer instanceof Viewer) || !isElement(slider))
@@ -107,5 +107,14 @@ export function useCompare(viewer: ShallowRef<Viewer>, left: Splittable, right: 
     handler.setInputAction(() => {
       moveActive = false
     }, ScreenSpaceEventType.PINCH_END)
+
+    onCleanup(() => {
+      handler.removeInputAction(ScreenSpaceEventType.LEFT_DOWN)
+      handler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE)
+      handler.removeInputAction(ScreenSpaceEventType.LEFT_UP)
+      handler.removeInputAction(ScreenSpaceEventType.PINCH_START)
+      handler.removeInputAction(ScreenSpaceEventType.PINCH_MOVE)
+      handler.removeInputAction(ScreenSpaceEventType.PINCH_END)
+    })
   })
 }
