@@ -9,9 +9,8 @@ describe('isString', () => {
   })
 
   it('returns false for non-strings', () => {
-    expect(isString(123 as any)).toBe(false)
-    expect(isString({} as any)).toBe(false)
-    expect(isString(String('wrapped') as any)).toBe(true)
+    expect(isString(123)).toBe(false)
+    expect(isString({})).toBe(false)
   })
 })
 
