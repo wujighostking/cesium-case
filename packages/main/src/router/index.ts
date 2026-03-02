@@ -3,6 +3,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 export const routesLink = [
   {
+    path: '/viewer',
+    name: '基础视图',
+    component: () => import('@/views/viewer.vue'),
+  },
+  {
     path: '/eagle-viewer',
     name: '鹰眼图',
     component: () => import('@/views/eagle-viewer.vue'),
