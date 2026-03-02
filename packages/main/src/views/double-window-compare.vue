@@ -37,22 +37,10 @@ function createImgImageryLayer() {
 
 <template>
   <div ref="cesiumContainer">
-    <div id="slider" ref="slider" />
+    <div
+      id="slider"
+      ref="slider"
+      class="absolute left-1/2 top-0 bg-[#d3d3d3] w-5px h-full z-[9999] hover:cursor-ew-resize"
+    />
   </div>
 </template>
-
-<style scoped>
-#slider {
-  position: absolute;
-  left: 50%;
-  top: 0px;
-  background-color: #d3d3d3;
-  width: 5px;
-  height: 100%;
-  z-index: 9999;
-}
-
-#slider:hover {
-  cursor: ew-resize;
-}
-</style>
