@@ -22,6 +22,11 @@ export const routesLink = [
     name: '全球风向',
     component: () => import('@/views/wind-speed.vue'),
   },
+  {
+    path: '/tiles-styling',
+    name: '3D 瓦片样式',
+    component: () => import('@/views/tiles-styling.vue'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [
