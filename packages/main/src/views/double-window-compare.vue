@@ -16,7 +16,7 @@ useCompare(
   sliderRef,
 )
 
-const tianDiTuKey = 'd3bd4850920690f790ce6d52a9ad73af'
+const tianDiTuKey = import.meta.env.VITE_TIANDITU_KEY
 function createVecImageryLayer() {
   return new ImageryLayer(
     new UrlTemplateImageryProvider({
