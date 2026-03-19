@@ -1,6 +1,9 @@
 shellEmulator: true
 
 trustPolicy: no-downgrade
-
 packages:
   - packages/*
+onlyBuiltDependencies:
+  - esbuild
+  - protobufjs
+  - simple-git-hooks
