@@ -48,7 +48,7 @@ export function useEagleViewer(viewer: ShallowRef<Viewer>, eagleViewer: ShallowR
   function eagleEye() {
     eagleViewer.value.scene.screenSpaceCameraController.enableInputs = false
     // 每一帧渲染时监听
-    // viewer1.clock.onTick.addEventListener(this.syncCamera)
+    // viewer.value.clock.onTick.addEventListener(syncCamera)
     // 场景渲染前添加监听
     viewer.value.scene.preRender.addEventListener(syncCamera)
   }
