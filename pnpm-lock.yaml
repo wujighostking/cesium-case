@@ -78,6 +78,9 @@ importers:
       '@cesium/viewer':
         specifier: workspace:*
         version: link:../viewer
+      utils:
+        specifier: workspace:*
+        version: link:../utils
 
   packages/utils: {}
 

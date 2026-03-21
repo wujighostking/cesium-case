@@ -2,7 +2,7 @@
 import type { Viewer } from 'cesium'
 import type { ShallowRef } from 'vue'
 import { useCompare, useViewer } from '@cesium/viewer'
-import { ImageryLayer, UrlTemplateImageryProvider } from 'cesium'
+import { createImageryLayer, tianDiTuKey } from 'utils'
 import { useTemplateRef } from 'vue'
 
 const containerRef = useTemplateRef('cesiumContainer')
@@ -16,22 +16,17 @@ useCompare(
   sliderRef,
 )
 
-const tianDiTuKey = import.meta.env.VITE_TIANDITU_KEY
 function createVecImageryLayer() {
-  return new ImageryLayer(
-    new UrlTemplateImageryProvider({
-      url: `https://t{s}.tianditu.gov.cn/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&layer=vec&style=default&tilematrixset=w&format=tiles&tilematrix={z}&tilerow={y}&tilecol={x}&tk=${tianDiTuKey}`,
-      subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
-    }),
-  )
+  return createImageryLayer({
+    url: `https://t{s}.tianditu.gov.cn/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&layer=vec&style=default&tilematrixset=w&format=tiles&tilematrix={z}&tilerow={y}&tilecol={x}&tk=${tianDiTuKey}`,
+    subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+  })
 }
 function createImgImageryLayer() {
-  return new ImageryLayer(
-    new UrlTemplateImageryProvider({
-      url: `https://t{s}.tianditu.gov.cn/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&layer=img&style=default&tilematrixset=w&format=tiles&tilematrix={z}&tilerow={y}&tilecol={x}&tk=${tianDiTuKey}`,
-      subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
-    }),
-  )
+  return createImageryLayer({
+    url: `https://t{s}.tianditu.gov.cn/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&layer=img&style=default&tilematrixset=w&format=tiles&tilematrix={z}&tilerow={y}&tilecol={x}&tk=${tianDiTuKey}`,
+    subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+  })
 }
 </script>
 

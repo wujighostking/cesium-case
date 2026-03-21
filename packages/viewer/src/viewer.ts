@@ -6,8 +6,8 @@ import { onBeforeUnmount, onMounted, shallowRef, watch } from 'vue'
 type ViewerParams = ConstructorParameters<typeof Viewer>
 type Container = ReturnType<typeof useTemplateRef>
 
-export function useViewer(container: Container, options?: ViewerParams[1]) {
-  const viewerInstance = shallowRef<Viewer | null>(null)
+export function useViewer<T = Viewer>(container: Container, options?: ViewerParams[1]): ShallowRef<T> {
+  const viewerInstance = shallowRef<T | null>(null)
 
   Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(112.6, 22.4, 114.0, 23.7)
 
@@ -41,7 +41,7 @@ export function useViewer(container: Container, options?: ViewerParams[1]) {
     viewerInstance.value = null
   })
 
-  return viewerInstance
+  return viewerInstance as ShallowRef<T>
 }
 
 export function useEagleViewer(viewer: ShallowRef<Viewer>, eagleViewer: ShallowRef<Viewer>) {

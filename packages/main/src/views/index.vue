@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { routesLink } from '../router'
+import { routesLink } from '@/router'
 </script>
 
 <template>

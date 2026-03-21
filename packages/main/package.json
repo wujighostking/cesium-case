@@ -23,6 +23,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@cesium/viewer": "workspace:*"
+    "@cesium/viewer": "workspace:*",
+    "utils": "workspace:*"
   }
 }
