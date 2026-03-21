@@ -19,7 +19,9 @@
   "files": [
     "dist"
   ],
-  "scripts": {},
+  "scripts": {
+    "lint": "eslint src"
+  },
   "dependencies": {
     "@cesium/viewer": "workspace:*"
   }

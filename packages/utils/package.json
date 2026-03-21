@@ -19,5 +19,11 @@
   "files": [
     "dist"
   ],
-  "scripts": {}
+  "scripts": {
+    "build": "pnpm run build:bundle && pnpm run build:types",
+    "build:bundle": "vite build",
+    "build:types": "tsc -p tsconfig.build.json",
+    "lint": "eslint src",
+    "test": "vitest run"
+  }
 }

@@ -8,6 +8,9 @@ node_modules
 # System
 .DS_Store
 
+# Turbo
+.turbo
+
 # Bundle
 dist
 coverage
