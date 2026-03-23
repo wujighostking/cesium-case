@@ -27,6 +27,11 @@ export const routesLink = [
     name: '3D 瓦片样式',
     component: () => import('@/views/tiles-styling.vue'),
   },
+  {
+    path: '/models',
+    name: '加载模型',
+    component: () => import('@/views/models.vue'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [
