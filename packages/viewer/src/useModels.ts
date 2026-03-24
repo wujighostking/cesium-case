@@ -1,5 +1,5 @@
-import type { HeadingPitchRange, Resource, Viewer } from 'cesium'
-import type { ShallowRef } from 'vue'
+import type { Entity, HeadingPitchRange, ModelGraphics, Viewer } from 'cesium'
+import type { ShallowRef, WatchHandle } from 'vue'
 import {
   Cartesian3,
   Cartographic,
@@ -11,35 +11,13 @@ import {
   Quaternion,
   Transforms,
 } from 'cesium'
-import { EMPTY_OBJECT } from 'utils'
+import { EMPTY_OBJECT, getFileExtension } from 'utils'
 import { watch } from 'vue'
 
-interface Options {
-  adjustOptions?: TilesetTransformOptions
-  tilesetOptions?: Cesium3DTileset.ConstructorOptions
-  offset?: HeadingPitchRange
-  callback?: (tileset: Cesium3DTileset) => void
-}
-export function useModels(
-  viewer: ShallowRef<Viewer>,
-  url: Resource | string,
-  options?: Options,
-) {
-  const { adjustOptions, tilesetOptions, offset, callback } = options ?? EMPTY_OBJECT
-  const dragonTilesetPromise = Cesium3DTileset.fromUrl(url, tilesetOptions)
-  return watch(viewer, () => {
-    dragonTilesetPromise
-      .then((dragonTileset) => {
-        viewer.value.scene.primitives.add(dragonTileset)
-        adjustTileset(dragonTileset, adjustOptions ?? EMPTY_OBJECT)
-        viewer.value.zoomTo(dragonTileset, offset)
-
-        callback?.(dragonTileset)
-      })
-      .catch((error) => {
-        console.error(error)
-      })
-  })
+interface GlbOptions extends Partial<Omit<ModelGraphics, 'uri'>> {
+  name?: string
+  position?: Cartesian3
+  callback?: (entity: Entity) => void
 }
 
 interface TilesetTransformOptions {
@@ -50,6 +28,71 @@ interface TilesetTransformOptions {
   pitch?: number
   roll?: number
 }
+
+interface TilesetOptions {
+  adjustOptions?: TilesetTransformOptions
+  tilesetOptions?: Cesium3DTileset.ConstructorOptions
+  offset?: HeadingPitchRange
+  callback?: (tileset: Cesium3DTileset) => void
+}
+
+type GlbUrl = `${string}.glb` | `${string}.gltf`
+
+export function useModels(viewer: ShallowRef<Viewer>, url: GlbUrl, options?: GlbOptions): WatchHandle
+export function useModels(viewer: ShallowRef<Viewer>, url: string, options?: TilesetOptions): WatchHandle
+export function useModels(
+  viewer: ShallowRef<Viewer>,
+  url: string,
+  options?: GlbOptions | TilesetOptions,
+): WatchHandle {
+  const fileExtension = getFileExtension(url)
+
+  if (fileExtension === '.glb' || fileExtension === '.gltf') {
+    return useGlb(viewer, url, options as GlbOptions)
+  }
+
+  // fileExtension === '.json'
+  return use3dTiles(viewer, url, options as TilesetOptions)
+}
+
+function useGlb(viewer: ShallowRef<Viewer>, url: string, options?: GlbOptions): WatchHandle {
+  const { name = url, position = Cartesian3.ZERO, callback, ...entityOptions } = options ?? EMPTY_OBJECT
+  return watch(viewer, () => {
+    const entity = viewer.value.entities.add({
+      name,
+      position,
+      model: {
+        uri: url,
+        ...entityOptions,
+      },
+    })
+
+    viewer.value.zoomTo(entity)
+
+    callback?.(entity)
+  })
+}
+
+function use3dTiles(viewer: ShallowRef<Viewer>, url: string, options?: TilesetOptions): WatchHandle {
+  const { adjustOptions, tilesetOptions, offset, callback } = options ?? EMPTY_OBJECT
+
+  const tilesetPromise = Cesium3DTileset.fromUrl(url, tilesetOptions)
+
+  return watch(viewer, () => {
+    tilesetPromise
+      .then((tileset) => {
+        viewer.value.scene.primitives.add(tileset)
+        adjustTileset(tileset, adjustOptions ?? EMPTY_OBJECT)
+        viewer.value.zoomTo(tileset, offset)
+
+        callback?.(tileset)
+      })
+      .catch((error) => {
+        console.error(error)
+      })
+  })
+}
+
 /**
  * Move and rotate 3D Tiles with degree-based heading/pitch/roll.
  */
