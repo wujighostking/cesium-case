@@ -14,6 +14,7 @@ const stop = useModels(
       longitude: 116.4074,
       latitude: 39.9042,
       heightOffset: 500,
+      roll: 0,
     },
     offset: new HeadingPitchRange(0, 0, 0),
     callback: () => {
