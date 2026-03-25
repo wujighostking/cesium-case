@@ -32,6 +32,11 @@ export const routesLink = [
     name: '加载模型',
     component: () => import('@/views/models.vue'),
   },
+  {
+    path: '/photo-sphere-viewer',
+    name: '全景视图',
+    component: () => import('@/views/photo-sphere-viewer.vue'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [
