@@ -7,3 +7,10 @@ export function radianToDegree(radian: number) {
 export function degreeToRadian(degree: number) {
   return Math.toRadians(degree)
 }
+
+/**
+ * @description 判断数字是否是负数
+ */
+export function isNegative(n: number) {
+  return n < 0
+}
