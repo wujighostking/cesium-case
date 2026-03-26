@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
+import Vuejsx from '@vitejs/plugin-vue-jsx'
 import UnoCss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { defineConfig } from 'vite'
@@ -10,6 +11,7 @@ export default defineConfig({
     cesium(),
     UnoCss(),
     vue(),
+    Vuejsx(),
     AutoImport({
       imports: ['vue'],
       dts: 'typings/auto-imports.d.ts',

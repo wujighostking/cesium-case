@@ -1,8 +1,13 @@
 shellEmulator: true
 
 trustPolicy: no-downgrade
+
+trustPolicyExclude:
+  - semver@6.3.1
+
 packages:
   - packages/*
+
 onlyBuiltDependencies:
   - esbuild
   - protobufjs

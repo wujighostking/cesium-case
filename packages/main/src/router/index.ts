@@ -35,7 +35,7 @@ export const routesLink = [
   {
     path: '/photo-sphere-viewer',
     name: '全景视图',
-    component: () => import('@/views/photo-sphere-viewer.vue'),
+    component: () => import('@/views/photo-sphere-viewer.tsx'),
   },
 ]
 
