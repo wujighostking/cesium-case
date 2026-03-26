@@ -37,6 +37,11 @@ export const routesLink = [
     name: '全景视图',
     component: () => import('@/views/photo-sphere-viewer.tsx'),
   },
+  {
+    path: '/roam',
+    name: '漫游',
+    component: () => import('@/views/roam.tsx'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [

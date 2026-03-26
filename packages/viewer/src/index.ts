@@ -1,6 +1,7 @@
 export * from './double-window-compare'
 export * from './tiles-styling'
 export * from './useModels'
+export * from './useRoam'
 export * from './useSphereViewer'
 export * from './viewer'
 export * from './wind-speed'
