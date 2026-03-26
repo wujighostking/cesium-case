@@ -170,3 +170,196 @@ export function moveHorizontal(camera: Camera, amount: number) {
 function formatAmount(amount: number) {
   return isNegative(amount) ? amount : -amount
 }
+
+interface CruiseOptions {
+  /** 航线坐标点 [经度, 纬度, 高度][] */
+  coordinates: [number, number, number][]
+  /** 巡航速度（米/秒），默认 50 */
+  speed?: number
+  /** 是否循环巡航，默认 false */
+  loop?: boolean
+  /** 相机摇摆角度（度），默认 1 */
+  lookAmount?: number
+  /** 每帧回调，progress 范围 0~1 */
+  onUpdate?: (progress: number) => void
+  /** 巡航完成回调 */
+  onComplete?: () => void
+  /** 巡航开始回调 */
+  onStart?: () => void
+}
+
+/**
+ * @description 根据给定的 kml 航线，视角沿着航线自动巡航，相机可以上下左右摇摆，但是不能离开航线
+ */
+export function useRouteCruise(viewer: ShallowRef<Viewer>, options: CruiseOptions) {
+  const {
+    coordinates,
+    speed = 50,
+    loop = false,
+    lookAmount = 1,
+    onUpdate,
+    onComplete,
+  } = options
+
+  // 将经纬度坐标转换为 Cartesian3
+  const positions = coordinates.map(([lng, lat, alt]) =>
+    Cartesian3.fromDegrees(lng, lat, alt),
+  )
+
+  // 计算各段距离和总距离
+  const segmentDistances: number[] = []
+  let totalDistance = 0
+  for (let i = 0; i < positions.length - 1; i++) {
+    const d = Cartesian3.distance(positions[i], positions[i + 1])
+    segmentDistances.push(d)
+    totalDistance += d
+  }
+
+  // 累计距离，用于快速定位当前所在段
+  const cumulativeDistances: number[] = [0]
+  for (let i = 0; i < segmentDistances.length; i++) {
+    cumulativeDistances.push(cumulativeDistances[i] + segmentDistances[i])
+  }
+
+  let traveledDistance = 0
+  let lastTimestamp = 0
+  let paused = false
+
+  const stop = watch([viewer], ([newViewer], __, onCleanup) => {
+    const camera = newViewer.camera
+    const scene = newViewer.scene
+    const controller = scene.screenSpaceCameraController
+
+    // 禁用所有默认相机交互，防止用户移动离开航线
+    controller.enableTranslate = false
+    controller.enableZoom = false
+    controller.enableRotate = false
+    controller.enableTilt = false
+    controller.enableLook = false
+
+    // 设置初始位置
+    camera.position = Cartesian3.clone(positions[0])
+
+    // 设置初始朝向：面向下一个航点
+    if (positions.length > 1) {
+      const direction = Cartesian3.normalize(
+        Cartesian3.subtract(positions[1], positions[0], new Cartesian3()),
+        new Cartesian3(),
+      )
+      const localUp = Cartesian3.normalize(camera.position, new Cartesian3())
+      const right = Cartesian3.normalize(
+        Cartesian3.cross(direction, localUp, new Cartesian3()),
+        new Cartesian3(),
+      )
+
+      camera.direction = direction
+      camera.up = Cartesian3.normalize(
+        Cartesian3.cross(right, direction, new Cartesian3()),
+        new Cartesian3(),
+      )
+    }
+
+    // 键盘控制视角摇摆（上下左右看，但不移动位置）
+    function handleKeydown(e: KeyboardEvent) {
+      switch (e.code) {
+        case 'ArrowLeft':
+        case 'KeyA':
+          _look(camera, 'lookLeft', lookAmount)
+          break
+        case 'ArrowRight':
+        case 'KeyD':
+          _look(camera, 'lookRight', lookAmount)
+          break
+        case 'ArrowUp':
+        case 'KeyW':
+          _look(camera, 'lookUp', lookAmount)
+          break
+        case 'ArrowDown':
+        case 'KeyS':
+          _look(camera, 'lookDown', lookAmount)
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeydown)
+
+    // 使用 Cesium 的 preRender 事件驱动巡航动画
+    const removeListener = scene.preRender.addEventListener(() => {
+      if (paused) {
+        lastTimestamp = 0
+        return
+      }
+
+      const now = performance.now()
+      if (lastTimestamp === 0) {
+        lastTimestamp = now
+        return
+      }
+
+      const deltaTime = (now - lastTimestamp) / 1000
+      lastTimestamp = now
+      traveledDistance += speed * deltaTime
+
+      // 到达终点
+      if (traveledDistance >= totalDistance) {
+        if (loop) {
+          traveledDistance %= totalDistance
+        }
+        else {
+          paused = true
+          camera.position = Cartesian3.clone(positions[positions.length - 1])
+          onUpdate?.(1)
+          onComplete?.()
+          return
+        }
+      }
+
+      // 定位当前所在段
+      let segmentIndex = 0
+      for (let i = 0; i < cumulativeDistances.length - 1; i++) {
+        if (traveledDistance >= cumulativeDistances[i] && traveledDistance < cumulativeDistances[i + 1]) {
+          segmentIndex = i
+          break
+        }
+      }
+
+      // 计算段内插值比例
+      const segmentLength = segmentDistances[segmentIndex]
+      const t = segmentLength > 0
+        ? (traveledDistance - cumulativeDistances[segmentIndex]) / segmentLength
+        : 0
+
+      // 插值计算当前位置，锁定相机到航线上
+      camera.position = Cartesian3.lerp(
+        positions[segmentIndex],
+        positions[segmentIndex + 1],
+        t,
+        new Cartesian3(),
+      )
+
+      onUpdate?.(traveledDistance / totalDistance)
+    })
+
+    onCleanup(() => {
+      removeListener()
+      document.removeEventListener('keydown', handleKeydown)
+
+      // 恢复默认相机控制
+      controller.enableTranslate = true
+      controller.enableZoom = true
+      controller.enableRotate = true
+      controller.enableTilt = true
+      controller.enableLook = true
+    })
+  })
+
+  function pause() {
+    paused = true
+  }
+
+  function resume() {
+    paused = false
+  }
+
+  return { stop, pause, resume }
+}
