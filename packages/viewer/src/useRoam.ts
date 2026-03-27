@@ -1,6 +1,6 @@
 import type { Camera, Viewer } from 'cesium'
 import type { ShallowRef } from 'vue'
-import { Cartesian3 } from 'cesium'
+import { Cartesian2, Cartesian3, ScreenSpaceEventHandler, ScreenSpaceEventType } from 'cesium'
 import { degreeToRadian, EMPTY_OBJECT, isNegative } from 'utils'
 import { watch } from 'vue'
 
@@ -202,9 +202,7 @@ export function useRouteCruise(viewer: ShallowRef<Viewer>, options: CruiseOption
   } = options
 
   // 将经纬度坐标转换为 Cartesian3
-  const positions = coordinates.map(([lng, lat, alt]) =>
-    Cartesian3.fromDegrees(lng, lat, alt),
-  )
+  const positions = coordinates.map(([lng, lat, alt]) => Cartesian3.fromDegrees(lng, lat, alt))
 
   // 计算各段距离和总距离
   const segmentDistances: number[] = []
@@ -340,9 +338,12 @@ export function useRouteCruise(viewer: ShallowRef<Viewer>, options: CruiseOption
       onUpdate?.(traveledDistance / totalDistance)
     })
 
+    const handler = moveAction(viewer.value, { lookAmount })
+
     onCleanup(() => {
       removeListener()
       document.removeEventListener('keydown', handleKeydown)
+      handler.destroy()
 
       // 恢复默认相机控制
       controller.enableTranslate = true
@@ -362,4 +363,42 @@ export function useRouteCruise(viewer: ShallowRef<Viewer>, options: CruiseOption
   }
 
   return { stop, pause, resume }
+}
+
+function moveAction(viewer: Viewer, options: any) {
+  const { scene, camera } = viewer
+  const { lookAmount } = options
+
+  // 使用 Cesium 的 ScreenSpaceEventHandler 处理鼠标拖拽摆动视角
+  const handler = new ScreenSpaceEventHandler(scene.canvas)
+  const lastPosition = new Cartesian2()
+  let isDragging = false
+
+  handler.setInputAction((event: { position: Cartesian2 }) => {
+    isDragging = true
+    Cartesian2.clone(event.position, lastPosition)
+  }, ScreenSpaceEventType.LEFT_DOWN)
+
+  handler.setInputAction((event: { endPosition: Cartesian2 }) => {
+    if (!isDragging)
+      return
+
+    const deltaX = event.endPosition.x - lastPosition.x
+    const deltaY = event.endPosition.y - lastPosition.y
+    Cartesian2.clone(event.endPosition, lastPosition)
+
+    // 水平拖拽 → 左右摆动，垂直拖拽 → 上下摆动
+    if (deltaX !== 0) {
+      _look(camera, deltaX < 0 ? 'lookLeft' : 'lookRight', Math.abs(deltaX) * lookAmount * 0.1)
+    }
+    if (deltaY !== 0) {
+      _look(camera, deltaY < 0 ? 'lookUp' : 'lookDown', Math.abs(deltaY) * lookAmount * 0.1)
+    }
+  }, ScreenSpaceEventType.MOUSE_MOVE)
+
+  handler.setInputAction(() => {
+    isDragging = false
+  }, ScreenSpaceEventType.LEFT_UP)
+
+  return handler
 }
