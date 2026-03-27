@@ -25,11 +25,14 @@ const viewer = useViewer(cesiumContainerRef)
 
 useModels(
   viewer,
-  '/models/CesiumAir/Cesium_Air.glb',
+  '/models/CesiumDrone/CesiumDrone.glb',
   {
     name: 'Cesium_Air',
     position: Cartesian3.fromDegrees(116.4074, 39.9042, 500),
-    // minimumPixelSize: 128,
+    callback: (entity) => {
+      viewer.value.clockViewModel.shouldAnimate = true
+      viewer.value.trackedEntity = entity
+    },
   },
 )
 </script>
