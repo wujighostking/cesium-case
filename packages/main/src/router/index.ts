@@ -42,6 +42,11 @@ export const routesLink = [
     name: '漫游',
     component: () => import('@/views/roam.tsx'),
   },
+  {
+    path: '/query',
+    name: '查询',
+    component: () => import('@/views/query.tsx'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [
