@@ -30,7 +30,7 @@ onMounted(() => {
     // stopTime: Cesium.JulianDate.fromDate(stopTime),
     clockRange: Cesium.ClockRange.LOOP_STOP,
     clockStep: Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-    multiplier: 1,
+    multiplier: 10,
     shouldAnimate: true,
   })
 
@@ -76,9 +76,29 @@ onMounted(() => {
     [113.45082070700005, 23.340899211000833, 1000],
   ]
 
+  // 使用 CatmullRomSpline 对路径点做平滑插值
+  const rawPositions = pathData.map(pos => Cesium.Cartesian3.fromDegrees(...pos))
+  const times = rawPositions.map((_, i) => i / (rawPositions.length - 1))
+  const spline = new Cesium.CatmullRomSpline({
+    times,
+    points: rawPositions,
+  })
+
+  const smoothCount = rawPositions.length * 10
+  const smoothPositions: [number, number, number][] = []
+  for (let i = 0; i <= smoothCount; i++) {
+    const cartesian = spline.evaluate(i / smoothCount)
+    const carto = Cesium.Cartographic.fromCartesian(cartesian)
+    smoothPositions.push([
+      Cesium.Math.toDegrees(carto.longitude),
+      Cesium.Math.toDegrees(carto.latitude),
+      carto.height,
+    ])
+  }
+
   const polyline = viewer.entities.add({
     polyline: {
-      positions: Cesium.Cartesian3.fromDegreesArrayHeights(pathData.flat()),
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights(smoothPositions.flat()),
       material: new Cesium.Color(1, 0, 0, 0.5),
       width: 3,
     // show: false,
@@ -87,11 +107,11 @@ onMounted(() => {
 
   const property = new Cesium.SampledPositionProperty()
 
-  pathData.forEach((pos, index) => {
+  smoothPositions.forEach((pos, index) => {
     const tempTime = new Cesium.JulianDate()
     Cesium.JulianDate.addSeconds(viewer.clock.currentTime, index * 4, tempTime)
 
-    if (index === pathData.length - 1) {
+    if (index === smoothPositions.length - 1) {
       stopTime = Cesium.JulianDate.addSeconds(
         viewer.clock.currentTime,
         (index - 1) * 4,
