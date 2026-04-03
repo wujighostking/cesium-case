@@ -18,6 +18,10 @@ export default defineConfig({
     }),
   ],
 
+  server: {
+    host: true,
+  },
+
   resolve: {
     alias: {
       '@': resolve(__dirname, './packages/main/src'),

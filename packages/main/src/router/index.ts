@@ -47,6 +47,11 @@ export const routesLink = [
     name: '查询',
     component: () => import('@/views/query.tsx'),
   },
+  {
+    path: '/trajectory',
+    name: '轨迹',
+    component: () => import('@/views/trajectory.vue'),
+  },
 ]
 
 const routes: RouteRecordRaw[] = [
